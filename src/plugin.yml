@@ -16,3 +16,6 @@ commands:
     aliases: ["cancel"]
   settings:
     usage: ""
+  enable:
+    usage: ""
+    aliases: ["un-enable"]

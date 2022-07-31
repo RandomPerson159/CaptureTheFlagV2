@@ -14,11 +14,13 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +40,7 @@ public class InvClickListener implements Listener {
     private static Inventory BOW = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Long-range Kit");
     private static Inventory FLAG_STEALER = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Flag-stealer Kit");
 
-    {
+    static {
         redKits.put(KitType.MID_FIELD, 0);
         redKits.put(KitType.DEFENSE, 0);
         redKits.put(KitType.BOW, 0);
@@ -61,6 +63,7 @@ public class InvClickListener implements Listener {
         MID_FIELD.addItem(KitType.MID_FIELD.getItems());
         DEFENSE.addItem(KitType.DEFENSE.getArmor());
         DEFENSE.addItem(KitType.DEFENSE.getItems());
+        DEFENSE.addItem(new ItemStack(Material.FIREWORK_ROCKET, 3));
         BOW.addItem(KitType.BOW.getArmor());
         BOW.addItem(KitType.BOW.getItems());
         FLAG_STEALER.addItem(KitType.FLAG_STEALER.getArmor());
@@ -146,24 +149,29 @@ public class InvClickListener implements Listener {
         if (ev.getItem() == null) {
             return;
         }
-        if (Main.getInstance().getState() != GameState.GAME) {
+        if (Main.getInstance().getState() != GameState.STARTING) {
             return;
         }
-        if (ev.getItem().getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Select a Kit")) {
-            switch (Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()).getTeam()) {
-                case RED:
-                    ev.getPlayer().openInventory(RED_KITS);
-                    break;
-                case BLUE:
-                    ev.getPlayer().openInventory(BLUE_KITS);
-                    break;
-                case LIME:
-                    ev.getPlayer().openInventory(LIME_KITS);
-                    break;
-                default:
-                    ev.getPlayer().openInventory(YELLOW_KITS);
+        if (ev.getAction() == Action.RIGHT_CLICK_AIR
+                || ev.getAction() == Action.LEFT_CLICK_AIR
+                || ev.getAction() == Action.RIGHT_CLICK_BLOCK
+                || ev.getAction() == Action.LEFT_CLICK_BLOCK) {
+            if (ev.getItem().getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Select a Kit")) {
+                switch (Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()).getTeam()) {
+                    case RED:
+                        ev.getPlayer().openInventory(RED_KITS);
+                        break;
+                    case BLUE:
+                        ev.getPlayer().openInventory(BLUE_KITS);
+                        break;
+                    case LIME:
+                        ev.getPlayer().openInventory(LIME_KITS);
+                        break;
+                    default:
+                        ev.getPlayer().openInventory(YELLOW_KITS);
+                }
+                ev.setCancelled(true);
             }
-            ev.setCancelled(true);
         }
     }
 

@@ -3,11 +3,14 @@ package com.random.captureTheFlag.player;
 import com.random.captureTheFlag.util.ItemBuilder;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 public enum KitType {
     MID_FIELD(new ItemBuilder().setMaterial(Material.IRON_AXE).setUnbreakable(true).setDisplayName(ChatColor.GOLD + "Mid-field Kit").getItem(), new ItemStack[] {
@@ -29,12 +32,11 @@ public enum KitType {
             new ItemBuilder().setMaterial(Material.LEATHER_CHESTPLATE).addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.IRON_LEGGINGS).setUnbreakable(true).addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1).getItem(),
             new ItemBuilder().setMaterial(Material.IRON_BOOTS).setUnbreakable(true).addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1).getItem()
-    }, new ItemBuilder().setMaterial(Material.STONE_AXE).setUnbreakable(true).getItem(),
+    }, new ItemBuilder().setMaterial(Material.WOODEN_AXE).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.STONE_SWORD).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.CROSSBOW).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.SHIELD).setUnbreakable(true).getItem(),
-            new ItemBuilder().setMaterial(Material.GOLDEN_CARROT).setAmount(12).getItem(),
-            new ItemBuilder().setMaterial(Material.GOLDEN_APPLE).getItem()
+            new ItemBuilder().setMaterial(Material.GOLDEN_CARROT).setAmount(3).getItem()
     ),
     FLAG_STEALER(new ItemBuilder().setMaterial(Material.IRON_SWORD).setDisplayName(ChatColor.GOLD + "Flag-stealer Kit").getItem(), new ItemStack[] {
             new ItemBuilder().setMaterial(Material.LEATHER_HELMET).addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1).setUnbreakable(true).getItem(),
@@ -54,7 +56,7 @@ public enum KitType {
             new ItemBuilder().setMaterial(Material.CHAINMAIL_BOOTS).setUnbreakable(true).getItem()
     }, new ItemBuilder().setMaterial(Material.STONE_SWORD).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.CROSSBOW).setUnbreakable(true).addEnchantment(Enchantment.PIERCING, 1).getItem(),
-            new ItemBuilder().setMaterial(Material.BOW).setUnbreakable(true).getItem(),
+            new ItemBuilder().setMaterial(Material.BOW).addEnchantment(Enchantment.ARROW_DAMAGE, 1).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.SPECTRAL_ARROW).setAmount(12).getItem(),
             new ItemBuilder().setMaterial(Material.SHIELD).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.COOKED_BEEF).setAmount(8).getItem()

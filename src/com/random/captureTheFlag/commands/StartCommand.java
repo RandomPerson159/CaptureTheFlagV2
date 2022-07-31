@@ -23,6 +23,10 @@ public class StartCommand implements CommandExecutor {
             player.sendMessage(ChatColor.RED + "[⚠] Whoops!  You do not have permission to run this command!");
             return true;
         }
+        if (!Main.getInstance().getEnabled()) {
+            player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Capture the Flag is not enabled!  Please run /enable to enable it!");
+            return true;
+        }
 
         if (s.equals("cancel")) {
             if (args.length == 0) {

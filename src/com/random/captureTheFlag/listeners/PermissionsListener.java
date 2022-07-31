@@ -18,7 +18,7 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 public class PermissionsListener implements Listener {
     @EventHandler
     void onItemDrop(PlayerDropItemEvent ev) {
-        if (Main.getInstance().getState() != GameState.GAME) {
+        if (Main.getInstance().getState() == GameState.WAIT) {
             if (!ev.getPlayer().isOp()) {
                 ev.setCancelled(true);
             }
@@ -33,7 +33,7 @@ public class PermissionsListener implements Listener {
 
     @EventHandler
     void onBlockBreak(BlockBreakEvent ev) {
-        if (Main.getInstance().getState() != GameState.GAME || Main.getInstance().getState() != GameState.STARTING) {
+        if (Main.getInstance().getState() == GameState.WAIT) {
             if (!ev.getPlayer().isOp()) {
                 ev.setCancelled(true);
             }
@@ -94,15 +94,14 @@ public class PermissionsListener implements Listener {
 
     @EventHandler
     void onBlockPlace(BlockPlaceEvent ev) {
-        if (Main.getInstance().getState() != GameState.GAME) {
+        if (Main.getInstance().getState() == GameState.WAIT) {
             if (!ev.getPlayer().isOp()) {
                 ev.setCancelled(true);
             }
-            return;
-        }
-        if (!ev.getPlayer().isOp()) {
+        } else if (!ev.getPlayer().isOp()) {
             ev.setCancelled(true);
-        } else if (Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()).getTeam() != Team.SPEC) {
+        } else if (Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()).getTeam() != null
+                && Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()).getTeam() != Team.SPEC) {
             ev.setCancelled(true);
         }
     }

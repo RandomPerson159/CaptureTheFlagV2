@@ -49,8 +49,10 @@ public class ItemBuilder {
 	public ItemBuilder setFirework(Color color) {
 		FireworkMeta meta = (FireworkMeta) item.getItemMeta();
 		meta.setPower(1);
-		meta.addEffect(FireworkEffect.builder().withFade(Color.GRAY).withColor(color).withColor(color).withColor(color)
-				.withColor(color).withColor(color).withColor(color).with(FireworkEffect.Type.BALL_LARGE).build());
+		for (int i = 0; i < 7; i++) {
+			meta.addEffect(FireworkEffect.builder().withFade(Color.GRAY).withColor(color).withColor(color).withColor(color)
+					.withColor(color).withColor(color).withColor(color).with(FireworkEffect.Type.BALL_LARGE).build());
+		}
 		item.setItemMeta(meta);
 		return this;
 	}

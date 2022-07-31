@@ -23,6 +23,10 @@ public class AssignCommand implements CommandExecutor {
             player.sendMessage(ChatColor.RED + "[⚠] Whoops!  You do not have permission to run this command!");
             return true;
         }
+        if (!Main.getInstance().getEnabled()) {
+            player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Capture the Flag is not enabled!  Please run /enable to enable it!");
+            return true;
+        }
 
         if (Main.getInstance().getState() == GameState.GAME) {
             player.sendMessage(ChatColor.YELLOW + "[⚠] Careful!  Changing teams in the middle of the game may cause issues unless the new team is a spectating team.");

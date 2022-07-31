@@ -27,7 +27,8 @@ public class HelpCommand implements CommandExecutor {
                     + ChatColor.DARK_GRAY + " - " + ChatColor.YELLOW + "/teams unlist {players...}" + ChatColor.GRAY + ": Un-assigns players from any team\n"
                     + ChatColor.DARK_GRAY + " - " + ChatColor.YELLOW + "/setup list {locations/setlocations/unsetlocations} {1,2,3,etc...} " + ChatColor.GRAY + ": Lists locations, locations that are set, and locations that need to be set\n"
                     + ChatColor.DARK_GRAY + " - " + ChatColor.YELLOW + "/setup set {location name} " + ChatColor.GRAY + ": Sets a location\n"
-                    + ChatColor.DARK_GRAY + " - " + ChatColor.YELLOW + "/setup tp {location name} " + ChatColor.GRAY + ": Teleports you to location (will be 0, 0, 0 if location is not set)");
+                    + ChatColor.DARK_GRAY + " - " + ChatColor.YELLOW + "/setup tp {location name} " + ChatColor.GRAY + ": Teleports you to location (will be 0, 0, 0 if location is not set)"
+                    + ChatColor.DARK_GRAY + " - " + ChatColor.YELLOW + "/enable " + ChatColor.GRAY + ": Enables / Un-enables Capture the Flag\n");
 
         }
 

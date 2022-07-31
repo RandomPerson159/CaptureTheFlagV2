@@ -93,6 +93,10 @@ public class SettingsCommand implements CommandExecutor {
             player.sendMessage(ChatColor.RED + "[⚠] Whoops!  You do not have permission to run this command!");
             return true;
         }
+        if (!Main.getInstance().getEnabled()) {
+            player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Capture the Flag is not enabled!  Please run /enable to enable it!");
+            return true;
+        }
         if (Main.getInstance().getState() == GameState.GAME) {
             player.sendMessage(ChatColor.RED + "[⚠] Whoops!  This command can only be used before a game!  You can cancel this game to change settings. /cancel");
             return true;

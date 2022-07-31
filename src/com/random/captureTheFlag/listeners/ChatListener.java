@@ -42,7 +42,7 @@ public class ChatListener implements Listener {
             }
             CapturePlayer sender = Main.getInstance().getPlayers().get(p.getUniqueId());
             String msg = ChatColor.GRAY + "[" + sender.getTeam().getColor() + sender.getTeam() + ChatColor.GRAY + "] "
-                    + ChatColor.WHITE + p.getName() + ": " + ev.getMessage();
+                    + ChatColor.WHITE + p.getName() + ": " + ChatColor.GRAY + ev.getMessage();
             for (Player all : Bukkit.getOnlinePlayers()) {
                 if (Main.getInstance().getPlayers().get(all.getUniqueId()) == null) {
                     all.sendMessage(msg);

@@ -17,27 +17,37 @@ public class JoinListener implements Listener {
     @EventHandler
     void onJoin(PlayerJoinEvent ev) {
         Player p = ev.getPlayer();
-        ev.getPlayer().teleport(Main.getInstance().getLocation("lobby"));
-        if (Main.getInstance().getState() != GameState.GAME) {
-            Main.getInstance().getPlayers().put(ev.getPlayer().getUniqueId(), new CapturePlayer(ev.getPlayer().getUniqueId()));
-            p.setGameMode(GameMode.SURVIVAL);
+        p.teleport(Main.getInstance().getLocation("lobby"));
+        p.setScoreboard(Main.getInstance().getBoard().getB());
+        p.setPlayerListName(ChatColor.GRAY + p.getName());
+        if ((Main.getInstance().getState() == GameState.GAME || Main.getInstance().getState() == GameState.STARTING)
+                && Main.getInstance().getPlayers().get(p.getUniqueId()) != null) {
+            CapturePlayer cp = Main.getInstance().getPlayers().get(p.getUniqueId());
+            ev.setJoinMessage(null);
+            if (cp.getTeam() != Team.SPEC) {
+                ev.setJoinMessage(cp.getTeam().getColor() + p.getName() + ChatColor.GRAY + " has rejoined.");
+                if (Main.getInstance().getState() != GameState.STARTING) {
+                    p.setHealth(0);
+                }
+            }
+            p.setPlayerListName(ChatColor.DARK_GRAY + "[" + cp.getTeam().getColor() + cp.getTeam().getName() + ChatColor.DARK_GRAY + "] " + ChatColor.WHITE + p.getName());
+            return;
+        } else if (Main.getInstance().getState() == GameState.WAIT) {
+            Main.getInstance().getPlayers().put(p.getUniqueId(), new CapturePlayer(p.getUniqueId()));
             if (p.isOp()) {
                 p.setGameMode(GameMode.CREATIVE);
+                p.setPlayerListName(ChatColor.DARK_RED + p.getName());
+            } else {
+                p.setGameMode(GameMode.SURVIVAL);
+                p.setPlayerListName(ChatColor.GRAY + p.getName());
             }
             p.getInventory().clear();
             p.setHealth(20);
             p.setSaturation(20);
-            return;
-        } else if (Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()) != null) {
-            CapturePlayer cp = Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId());
-            ev.setJoinMessage(null);
-            if (cp.getTeam() != Team.SPEC) {
-                ev.setJoinMessage(cp.getTeam().getColor() + ev.getPlayer().getName() + ChatColor.GRAY + " has rejoined.");
-                ev.getPlayer().setHealth(0);
-            }
-            return;
+
         } else {
-            ev.getPlayer().kickPlayer(ChatColor.RED + "[⚠] Whoops!  Event has already started! Please wait for a new round to start.");
+            p.kickPlayer(ChatColor.RED + "[⚠] Whoops!  Event has already started! Please wait for a new round to start.");
+            return;
         }
 
         int i = 0;
@@ -59,7 +69,10 @@ public class JoinListener implements Listener {
         CapturePlayer cp = Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId());
         ev.setQuitMessage(null);
         if (cp == null) return;
-        if (Main.getInstance().getState() != GameState.GAME) return;
+        if (Main.getInstance().getState() == GameState.WAIT) {
+            Main.getInstance().getPlayers().remove(cp.getPlayer().getUniqueId(), cp);
+            return;
+        }
 
         boolean teamMates = false;
         for (Player all : Bukkit.getOnlinePlayers()) {
@@ -92,13 +105,12 @@ public class JoinListener implements Listener {
         }
 
         ev.setQuitMessage(cp.getTeam().getColor() + ev.getPlayer().getName() + ChatColor.GRAY + " has quit.");
+
         for (Flag flag : Main.getInstance().getFlags()) {
             if (flag.getHolder() == cp) {
                 flag.drop(ev.getPlayer().getLocation(), cp);
                 ev.getPlayer().setHealth(0);
             }
         }
-
-
     }
 }

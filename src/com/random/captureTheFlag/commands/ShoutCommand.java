@@ -25,6 +25,10 @@ public class ShoutCommand implements CommandExecutor {
             player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Shout command is disabled!");
             return true;
         }
+        if (!Main.getInstance().getEnabled()) {
+            player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Capture the Flag is not enabled!  Please run /enable to enable it!");
+            return true;
+        }
         if (Main.getInstance().getState() != GameState.GAME) {
             player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Command can only be used during the game!");
             return true;

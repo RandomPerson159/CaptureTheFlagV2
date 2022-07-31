@@ -5,15 +5,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.scoreboard.Scoreboard;
 
 public class CaptureBoard {
-    private final Scoreboard b = Bukkit.getScoreboardManager().getMainScoreboard();
+    private Scoreboard b = Bukkit.getScoreboardManager().getMainScoreboard();
 
     public CaptureBoard() {
         for (Team teams : Team.values()) {
-            b.registerNewTeam(teams.getName()).setColor(teams.getColor());
+            if (b.getTeam(teams.getName()) == null) {
+                b.registerNewTeam(teams.getName()).setColor(teams.getColor());
+            }
         }
     }
 
     public Scoreboard getB() {
         return b;
     }
+
 }

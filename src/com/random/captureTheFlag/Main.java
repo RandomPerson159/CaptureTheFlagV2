@@ -1,10 +1,7 @@
 package com.random.captureTheFlag;
 
 import com.random.captureTheFlag.commands.*;
-import com.random.captureTheFlag.game.Flag;
-import com.random.captureTheFlag.game.FlagEvent;
-import com.random.captureTheFlag.game.GameState;
-import com.random.captureTheFlag.game.Settings;
+import com.random.captureTheFlag.game.*;
 import com.random.captureTheFlag.listeners.*;
 import com.random.captureTheFlag.player.CapturePlayer;
 import com.random.captureTheFlag.player.KitType;
@@ -28,7 +25,9 @@ public class Main extends JavaPlugin {
     private GameState state = GameState.WAIT;
     private final Set<Flag> flags = new HashSet<>();
     private Settings settings;
-    public Location wait;
+    private Location wait;
+    private CaptureBoard board;
+    private final boolean enabled = getConfig().getBoolean("enabled");
 
     public Main() {
         instance = this;
@@ -40,6 +39,13 @@ public class Main extends JavaPlugin {
         if (!(new File("./plugins/CaptureTheFlag/config.yml").exists())) {
             try {
                 new File("./plugins/CaptureTheFlag/config.yml").createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            FileConfiguration cfg = getConfig();
+            cfg.set("enabled", false);
+            try {
+                cfg.save("./plugins/CaptureTheFlag/config.yml");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -69,22 +75,51 @@ public class Main extends JavaPlugin {
             settings = new Settings();
         }
 
-        PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new ChatListener(), this);
-        pm.registerEvents(new FlagListener(), this);
-        pm.registerEvents(new InvClickListener(), this);
-        pm.registerEvents(new JoinListener(), this);
-        pm.registerEvents(new PermissionsListener(), this);
+        for (Player all : Bukkit.getOnlinePlayers()) {
+            players.put(all.getUniqueId(), new CapturePlayer(all.getUniqueId()));
+            if (enabled) {
+                all.sendMessage(ChatColor.GREEN + "Capture the Flag has been enabled!");
+            }
+        }
 
+        Bukkit.getPluginCommand("teams").setExecutor(new AssignCommand());
+        Bukkit.getPluginCommand("setup").setExecutor(new SetupCommand());
         Bukkit.getPluginCommand("teams").setExecutor(new AssignCommand());
         Bukkit.getPluginCommand("ctfhelp").setExecutor(new HelpCommand());
         Bukkit.getPluginCommand("setup").setExecutor(new SetupCommand());
         Bukkit.getPluginCommand("shout").setExecutor(new ShoutCommand());
         Bukkit.getPluginCommand("start").setExecutor(new StartCommand());
         Bukkit.getPluginCommand("settings").setExecutor(new SettingsCommand());
+        Bukkit.getPluginCommand("enable").setExecutor(new EnabledCommand());
+
+        if (enabled) {
+            PluginManager pm = Bukkit.getPluginManager();
+            pm.registerEvents(new ChatListener(), this);
+            pm.registerEvents(new FlagListener(), this);
+            pm.registerEvents(new JoinListener(), this);
+            pm.registerEvents(new PermissionsListener(), this);
+            pm.registerEvents(new InvClickListener(), this);
+        } else {
+            return;
+        }
 
         initFlags();
         initTeams();
+
+        board = new CaptureBoard();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (flags.size() != 0) {
+                    for (Flag flags : flags) {
+                        if (flags.isDropped()) {
+                            flags.getItem().getLocation().getWorld().spawnParticle(Particle.END_ROD, flags.getItem().getLocation().clone().add(0, 1.25, 0), 5);
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(this, 1, 1);
     }
 
     public GameState getState() {
@@ -241,6 +276,10 @@ public class Main extends JavaPlugin {
         }
         InvClickListener.yellowKits.put(KitType.FLAG_STEALER, InvClickListener.yellowKits.get(KitType.FLAG_STEALER) + 1);
         return KitType.FLAG_STEALER;
+    }
+
+    public CaptureBoard getBoard() {
+        return board;
     }
 
     public void start() {
@@ -542,6 +581,10 @@ public class Main extends JavaPlugin {
                 all.setGameMode(GameMode.SURVIVAL);
                 if (all.isOp()) {
                     all.setGameMode(GameMode.CREATIVE);
+                    all.setPlayerListName(ChatColor.DARK_RED + all.getName());
+                } else {
+                    all.setGameMode(GameMode.SURVIVAL);
+                    all.setPlayerListName(ChatColor.GRAY + all.getName());
                 }
                 all.getInventory().clear();
                 all.setHealth(20);
@@ -581,6 +624,10 @@ public class Main extends JavaPlugin {
                 }
             }.runTaskLater(this, 300);
         }
+    }
+
+    public boolean getEnabled() {
+        return enabled;
     }
 
     @Override
