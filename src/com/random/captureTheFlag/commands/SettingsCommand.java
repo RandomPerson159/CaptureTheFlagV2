@@ -12,6 +12,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
+import java.util.List;
+
 public class SettingsCommand implements CommandExecutor {
     public static final Inventory SETTINGS = Bukkit.createInventory(null, 45, ChatColor.DARK_PURPLE + "Settings");
 
@@ -41,7 +43,7 @@ public class SettingsCommand implements CommandExecutor {
         SETTINGS.setItem(13, new ItemBuilder().setMaterial(Material.PURPLE_BANNER)
                 .setAmount(Main.getInstance().getSettings().getFlags())
                 .setDisplayName(ChatColor.DARK_PURPLE + "Number of flags:")
-                .setLore(ChatColor.GREEN + "" + Main.getInstance().getSettings().getTeams() + " flags per team", ChatColor.YELLOW + "Can only be 1 or 2!", ChatColor.GRAY + "Right-click to decrease; left-click to increase.")
+                .setLore(ChatColor.GREEN + "" + Main.getInstance().getSettings().getFlags() + " flags per team", ChatColor.YELLOW + "Can only be 1, 2, or 3!", ChatColor.GRAY + "Right-click to decrease; left-click to increase.")
                 .getItem());
         SETTINGS.setItem(14, new ItemBuilder().setMaterial(Material.PURPLE_BED)
                 .setDisplayName(ChatColor.DARK_PURPLE + "Respawn time:")
@@ -50,6 +52,14 @@ public class SettingsCommand implements CommandExecutor {
         SETTINGS.setItem(15, new ItemBuilder().setMaterial(Material.NETHER_STAR)
                 .setDisplayName(ChatColor.DARK_PURPLE + "Auto-start:")
                 .setLore(Main.getInstance().getSettings().isAutoStart() ? ChatColor.GREEN + "Game will automatically start" : ChatColor.RED + "Game will not automatically start")
+                .getItem());
+        SETTINGS.setItem(16, new ItemBuilder().setMaterial(Material.PAPER)
+                .setDisplayName(ChatColor.DARK_PURPLE + "Map:")
+                .setLore(ChatColor.GRAY + "Current Map:" + Main.getInstance().getSettings().getMap())
+                .getItem());
+        SETTINGS.setItem(17, new ItemBuilder().setMaterial(Material.ENDER_EYE)
+                .setDisplayName(ChatColor.DARK_PURPLE + "Allow Spectators:")
+                .setLore(Main.getInstance().getSettings().isAllowSpectators() ? ChatColor.GREEN + "Spectators are allowed." : ChatColor.RED + "Spectators are not allowed.", ChatColor.GRAY + "Allows players to spectate.")
                 .getItem());
 
         SETTINGS.setItem(27, new ItemBuilder().setMaterial(Material.IRON_AXE)
@@ -98,8 +108,58 @@ public class SettingsCommand implements CommandExecutor {
             return true;
         }
         if (Main.getInstance().getState() == GameState.GAME) {
-            player.sendMessage(ChatColor.RED + "[⚠] Whoops!  This command can only be used before a game!  You can cancel this game to change settings. /cancel");
-            return true;
+            player.sendMessage(ChatColor.YELLOW + "[⚠] Careful!  Changing settings while game is running might cause issues!");
+        }
+        if (args.length != 0 && args[0].equals("map")) {
+            if (args.length == 3) {
+                switch (args[1]) {
+                    case "list":
+                        player.sendMessage(ChatColor.GREEN + "Current maps:");
+                        for (String maps : Main.getInstance().getSettings().getMaps()) {
+                            player.sendMessage(ChatColor.DARK_GRAY + " - " + ChatColor.YELLOW + maps);
+                        }
+                        return true;
+                    case "create":
+                    case "add": {
+                        if (Main.getInstance().getSettings().getMaps().contains(args[2])) {
+                            player.sendMessage(ChatColor.RED + "This map already exists!  You can overwrite values of it by setting the location for it again.");
+                            return true;
+                        }
+                        List<String> newMaps = Main.getInstance().getSettings().getMaps();
+                        newMaps.add(args[2]);
+                        Main.getInstance().getSettings().setMaps(newMaps);
+                        player.sendMessage(ChatColor.GREEN + "Map \"" + args[2] + "\" successfully created!");
+                        return true;
+                    }
+                    case "remove":
+                    case "delete": {
+                        if (!Main.getInstance().getSettings().getMaps().contains(args[2])) {
+                            player.sendMessage(ChatColor.RED + "This map does not exist!");
+                            return true;
+                        }
+                        if (args[2].equals("default")) {
+                            player.sendMessage(ChatColor.RED + "You cannot delete the default map!");
+                            return true;
+                        }
+                        List<String> newMaps = Main.getInstance().getSettings().getMaps();
+                        newMaps.remove(args[2]);
+                        Main.getInstance().getSettings().setMaps(newMaps);
+                        if (Main.getInstance().getSettings().getMap().equals(args[2])) {
+                            Main.getInstance().getSettings().setMap("default");
+                        }
+                        player.sendMessage(ChatColor.GREEN + "Map \"" + args[2] + "\" successfully removed.");
+                        return true;
+                    }
+                    case "set":
+                        if (!Main.getInstance().getSettings().getMaps().contains(args[2])) {
+                            player.sendMessage(ChatColor.RED + "This map does not exist!");
+                            return true;
+                        }
+                        Main.getInstance().getSettings().setMap(args[2]);
+                        player.sendMessage(ChatColor.GREEN + "Map set to \"" + args[2] + "\"!");
+                        return true;
+                }
+            }
         }
         updateInv();
         player.openInventory(SETTINGS);

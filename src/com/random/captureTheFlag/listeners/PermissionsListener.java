@@ -9,7 +9,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -43,13 +42,6 @@ public class PermissionsListener implements Listener {
             ev.setCancelled(true);
         } else if (Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()) != null
                 && Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId()).getTeam() != Team.SPEC) {
-            ev.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    void onSaturationDecrease(FoodLevelChangeEvent ev) {
-        if (Main.getInstance().getState() != GameState.GAME) {
             ev.setCancelled(true);
         }
     }

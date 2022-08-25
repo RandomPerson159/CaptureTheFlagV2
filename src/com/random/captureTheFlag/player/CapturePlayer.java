@@ -1,7 +1,6 @@
 package com.random.captureTheFlag.player;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -16,8 +15,11 @@ public class CapturePlayer {
     }
 
     public void setTeam(Team team) {
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + getPlayer().getName() + " group remove red-team");
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + getPlayer().getName() + " group remove blue-team");
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + getPlayer().getName() + " group remove spec-team");
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + getPlayer().getName() + " group add " + team.name().toLowerCase() + "-team");
         this.team = team;
-        getPlayer().setPlayerListName(ChatColor.DARK_GRAY + "[" + team.getColor() + team.getName() + ChatColor.DARK_GRAY + "] " + ChatColor.WHITE + getPlayer().getName());
     }
 
     public void setKit(KitType kit) {

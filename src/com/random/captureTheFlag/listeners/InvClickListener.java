@@ -137,7 +137,6 @@ public class InvClickListener implements Listener {
             LIME_KITS.setItem(i, new ItemBuilder().setMaterial(Material.GRAY_STAINED_GLASS_PANE).setDisplayName("§c").getItem());
             YELLOW_KITS.setItem(i, new ItemBuilder().setMaterial(Material.GRAY_STAINED_GLASS_PANE).setDisplayName("§c").getItem());
         }
-
         RED_KITS.setItem(22, new ItemBuilder().setMaterial(Material.BARRIER).setDisplayName(ChatColor.RED + "Close").getItem());
         BLUE_KITS.setItem(22, new ItemBuilder().setMaterial(Material.BARRIER).setDisplayName(ChatColor.RED + "Close").getItem());
         LIME_KITS.setItem(22, new ItemBuilder().setMaterial(Material.BARRIER).setDisplayName(ChatColor.RED + "Close").getItem());
@@ -222,7 +221,7 @@ public class InvClickListener implements Listener {
                 }
             }
             if (ev.getCurrentItem().getType() == Material.PURPLE_BANNER) {
-                Main.getInstance().getSettings().setFlags(Main.getInstance().getSettings().getFlags() == 1 ? 2 : 1);
+                Main.getInstance().getSettings().setFlags(Main.getInstance().getSettings().getFlags() == 3 ? 1 : Main.getInstance().getSettings().getFlags() + 1);
             }
             if (ev.getCurrentItem().getType() == Material.PURPLE_BED) {
                 if (ev.getClick() == ClickType.LEFT) {
@@ -237,6 +236,12 @@ public class InvClickListener implements Listener {
             }
             if (ev.getCurrentItem().getType() == Material.NETHER_STAR) {
                 Main.getInstance().getSettings().setAutoStart(!Main.getInstance().getSettings().isAutoStart());
+            }
+            if (ev.getCurrentItem().getType() == Material.PAPER) {
+                Main.getInstance().getSettings().setNextMap();
+            }
+            if (ev.getCurrentItem().getType() == Material.ENDER_EYE) {
+                Main.getInstance().getSettings().setAllowSpectators(!Main.getInstance().getSettings().isAllowSpectators());
             }
             if (ev.getCurrentItem().getType() == Material.IRON_AXE) {
                 if (ev.getClick() == ClickType.LEFT) {
@@ -341,7 +346,9 @@ public class InvClickListener implements Listener {
                     } else {
                         ev.getWhoClicked().closeInventory();
                         Bukkit.getPlayer(ev.getWhoClicked().getUniqueId()).playSound(ev.getWhoClicked().getLocation(), Sound.ENTITY_BLAZE_HURT, 5, 1);
-                        ev.getWhoClicked().sendMessage(ChatColor.RED + "Too many people have already selected the Mid-field Kit!");
+                        if (Main.getInstance().getSettings().getMidFeildKit() != 0) {
+                            ev.getWhoClicked().sendMessage(ChatColor.RED + "Too many people have already selected the Mid-field Kit!");
+                        }
                     }
                 }
             } else if (ev.getCurrentItem().getType() == Material.SHIELD) {

@@ -2,7 +2,6 @@ package com.random.captureTheFlag.commands;
 
 import com.random.captureTheFlag.Main;
 import com.random.captureTheFlag.game.GameState;
-import com.random.captureTheFlag.listeners.ChatListener;
 import com.random.captureTheFlag.player.CapturePlayer;
 import com.random.captureTheFlag.player.Team;
 import org.bukkit.Bukkit;
@@ -42,12 +41,7 @@ public class ShoutCommand implements CommandExecutor {
         StringBuilder msg = new StringBuilder();
 
         for (String arg : args) {
-            if (ChatListener.bannedWords.contains(arg)) {
-                player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Your message contained banned language!");
-                return true;
-            } else {
-                msg.append(arg).append(" ");
-            }
+            msg.append(arg).append(" ");
         }
 
         CapturePlayer cp = Main.getInstance().getPlayers().get(player.getUniqueId());

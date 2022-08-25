@@ -82,8 +82,16 @@ public class Flag {
     }
 
     public void drop(Location loc, CapturePlayer cp) {
+        if (loc.getBlock().getType() == Material.LAVA || loc.clone().subtract(0, 1, 0).getBlock().getType() == Material.LAVA) {
+            boolean foundBlock = false;
+            while (!foundBlock) {
+
+
+            }
+        }
+
         item = loc.getWorld().dropItem(loc, stack);
-        setDropped(true);
+        this.isDropped = true;
 
         String msg = ChatColor.GRAY + "[====================================================]\n"
                 + ChatColor.GOLD + "                     Flag Dropped\n \n"

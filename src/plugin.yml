@@ -1,21 +1,21 @@
-name: CaptureTheFlag
+name: CTF_2.1.0
 main: com.random.captureTheFlag.Main
-version: 2.0.1
-api-version: 1.19
+version: 2.1.0
+api-version: 1.18
 commands:
-  teams:
+  ctfteams:
     usage: ""
   ctfhelp:
     usage: ""
-  setup:
+  ctfsetup:
     usage: ""
   shout:
     usage: ""
-  start:
+  ctfstart:
     usage: ""
-    aliases: ["cancel"]
-  settings:
+    aliases: ["ctfcancel"]
+  ctfsettings:
     usage: ""
-  enable:
+  ctfenable:
     usage: ""
-    aliases: ["un-enable"]
+    aliases: ["ctfdisable"]

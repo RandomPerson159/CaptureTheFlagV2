@@ -1,13 +1,16 @@
 package com.random.captureTheFlag.commands;
 
 import com.random.captureTheFlag.Main;
-import com.random.captureTheFlag.player.CapturePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+
+import java.io.File;
+import java.io.IOException;
 
 public class EnabledCommand implements CommandExecutor {
     @Override
@@ -25,7 +28,13 @@ public class EnabledCommand implements CommandExecutor {
         if (args.length == 0) {
             player.sendMessage(ChatColor.YELLOW + "Capture the Flag wants to reload the server.  Run /enable confirm to confirm.");
         } else if (args[0].equals("confirm")) {
-            Main.getInstance().getConfig().set("enabled", !Main.getInstance().getEnabled());
+            FileConfiguration cfg = Main.getInstance().getConfig("settings");
+            cfg.set("enabled", !Main.getInstance().getEnabled());
+            try {
+                cfg.save(new File("./plugins/CaptureTheFlag/config.yml"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Bukkit.reload();
         }
         return false;

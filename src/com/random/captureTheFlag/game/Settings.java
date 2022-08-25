@@ -5,6 +5,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Settings {
     private int players;
@@ -17,7 +19,9 @@ public class Settings {
     private int bowKit;
     private int flags;
     private int respawn;
+    private String map;
     private boolean autoStart;
+    private boolean isAllowSpectators;
 
     public Settings(int players, boolean dropFlags, boolean shouts, int teams, int midFeildKit, int defenseKit, int flagStealerKit, int bowKit, int flags, int respawn) {
         FileConfiguration cfg = Main.getInstance().getConfig("settings");
@@ -43,6 +47,14 @@ public class Settings {
         cfg.set("respawn", respawn);
         this.autoStart = true;
         cfg.set("autoStart", true);
+        this.map = "default";
+        cfg.set("map", "default");
+        List<String> maps = new ArrayList<>();
+        maps.add("default");
+        cfg.set("maps", maps);
+        this.isAllowSpectators = false;
+        cfg.set("allowSpectators", false);
+        cfg.set("enabled", true);
 
         try {
             cfg.save(new File("./plugins/CaptureTheFlag/settings.yml"));
@@ -64,6 +76,38 @@ public class Settings {
         this.flags = cfg.getInt("flags");
         this.respawn = cfg.getInt("respawn");
         this.autoStart = cfg.getBoolean("autoStart");
+        this.map = cfg.getString("map");
+    }
+
+    public void setMap(String map) {
+        this.map = map;
+    }
+
+    public String getMap() {
+        return map;
+    }
+
+    public List<String> getMaps() {
+        return Main.getInstance().getConfig().getStringList("maps");
+    }
+
+    public void setMaps(List<String> maps) {
+        update("maps", maps);
+    }
+
+    public void setNextMap() {
+        List<String> maps = getMaps();
+        if (maps.get(maps.size() - 1).equals(map)) {
+            this.map = maps.get(0);
+            return;
+        }
+        int i = 0;
+        for (String map : maps) {
+            i++;
+            if (this.map.equals(map)) {
+                this.map = maps.get(i);
+            }
+        }
     }
 
     public void setPlayers(int players) {
@@ -163,6 +207,14 @@ public class Settings {
     public void setAutoStart(boolean autoStart) {
         this.autoStart = autoStart;
         update("autoStart", autoStart);
+    }
+
+    public boolean isAllowSpectators() {
+        return isAllowSpectators;
+    }
+
+    public void setAllowSpectators(boolean allowSpectators) {
+        isAllowSpectators = allowSpectators;
     }
 
     private void update(String path, Object obj) {

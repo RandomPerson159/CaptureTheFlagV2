@@ -10,26 +10,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
-import java.util.List;
-
 public class ChatListener implements Listener {
-    public static final List<String> bannedWords = (List<String>) Main.getInstance().getConfig("banned_words").getList("banned-words");
 
     @EventHandler
     void onChat(AsyncPlayerChatEvent ev) {
         Player p = ev.getPlayer();
 
-        String[] words = ev.getMessage().toLowerCase().split(" ");
-        for (String word : words) {
-            if (bannedWords.contains(word)) {
-                ev.setCancelled(true);
-                ev.getPlayer().sendMessage(ChatColor.RED + "[⚠] Whoops!  Your message contained banned language!");
-                return;
-            }
-        }
-
         if (Main.getInstance().getState() == GameState.WAIT) {
-            ev.setFormat(ChatColor.GRAY + "<" + ev.getPlayer().getName() + "> " + ChatColor.GRAY + ev.getMessage());
             return;
         }
 

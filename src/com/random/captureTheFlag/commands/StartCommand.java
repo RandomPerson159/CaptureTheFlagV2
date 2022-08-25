@@ -1,7 +1,6 @@
 package com.random.captureTheFlag.commands;
 
 import com.random.captureTheFlag.Main;
-import com.random.captureTheFlag.game.Flag;
 import com.random.captureTheFlag.game.GameState;
 import com.random.captureTheFlag.player.CapturePlayer;
 import com.random.captureTheFlag.player.Team;
@@ -28,7 +27,7 @@ public class StartCommand implements CommandExecutor {
             return true;
         }
 
-        if (s.equals("cancel")) {
+        if (s.equals("ctfcancel")) {
             if (args.length == 0) {
                 player.sendMessage(ChatColor.YELLOW + "[⚠] Careful!  You're about to cancel the game!  Run /cancel confirm to confirm.");
                 return true;
@@ -52,6 +51,10 @@ public class StartCommand implements CommandExecutor {
             }
         } else {
             if (args.length == 0) {
+                if (Main.getInstance().getState() == GameState.GAME || Main.getInstance().getState() == GameState.STARTING) {
+                    player.sendMessage(ChatColor.RED + "Game has already started!");
+                    return true;
+                }
                 int i = 0;
                 for (Player all : Bukkit.getOnlinePlayers()) {
                     if (Main.getInstance().getPlayers().get(all.getUniqueId()) != null) {

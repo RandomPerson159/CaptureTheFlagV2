@@ -7,10 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.Potion;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 
 public enum KitType {
     MID_FIELD(new ItemBuilder().setMaterial(Material.IRON_AXE).setUnbreakable(true).setDisplayName(ChatColor.GOLD + "Mid-field Kit").getItem(), new ItemStack[] {
@@ -23,7 +19,7 @@ public enum KitType {
             new ItemBuilder().setMaterial(Material.CROSSBOW).addEnchantment(Enchantment.MULTISHOT, 1).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.SHIELD).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.COOKED_BEEF).setAmount(8).getItem(),
-            new ItemBuilder().setMaterial(Material.SPECTRAL_ARROW).setAmount(4).getItem(),
+            new ItemBuilder().setMaterial(Material.ARROW).setAmount(4).getItem(),
             new ItemBuilder().setMaterial(Material.GOLDEN_APPLE).getItem()
             /* fireworks */
     ),
@@ -57,7 +53,7 @@ public enum KitType {
     }, new ItemBuilder().setMaterial(Material.STONE_SWORD).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.CROSSBOW).setUnbreakable(true).addEnchantment(Enchantment.PIERCING, 1).getItem(),
             new ItemBuilder().setMaterial(Material.BOW).addEnchantment(Enchantment.ARROW_DAMAGE, 1).setUnbreakable(true).getItem(),
-            new ItemBuilder().setMaterial(Material.SPECTRAL_ARROW).setAmount(12).getItem(),
+            new ItemBuilder().setMaterial(Material.ARROW).setAmount(12).getItem(),
             new ItemBuilder().setMaterial(Material.SHIELD).setUnbreakable(true).getItem(),
             new ItemBuilder().setMaterial(Material.COOKED_BEEF).setAmount(8).getItem()
     );
@@ -87,7 +83,7 @@ public enum KitType {
             player.getInventory().addItem(
                     new ItemBuilder().setMaterial(Material.FIREWORK_ROCKET)
                             .setFirework(cp.getTeam() == Team.RED ? Color.RED : cp.getTeam() == Team.BLUE ? Color.BLUE : cp.getTeam() == Team.LIME ? Color.LIME : Color.YELLOW)
-                            .setAmount(3).getItem()
+                            .setAmount(1).getItem()
             );
         }
     }
