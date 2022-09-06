@@ -31,7 +31,7 @@ public class EnabledCommand implements CommandExecutor {
             FileConfiguration cfg = Main.getInstance().getConfig("settings");
             cfg.set("enabled", !Main.getInstance().getEnabled());
             try {
-                cfg.save(new File("./plugins/CaptureTheFlag/config.yml"));
+                cfg.save(new File("./plugins/CaptureTheFlag/settings.yml"));
             } catch (IOException e) {
                 e.printStackTrace();
             }

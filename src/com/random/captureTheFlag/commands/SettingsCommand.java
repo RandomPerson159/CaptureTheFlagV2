@@ -23,13 +23,12 @@ public class SettingsCommand implements CommandExecutor {
         }
 
         SETTINGS.setItem(9, new ItemBuilder().setMaterial(Material.PLAYER_HEAD)
-                .setAmount(Main.getInstance().getSettings().getPlayers())
                 .setDisplayName(ChatColor.DARK_PURPLE + "Number of players:")
                 .setLore(ChatColor.GREEN + "" + Main.getInstance().getSettings().getPlayers() + " players going to play", ChatColor.GRAY + "" + (Main.getInstance().getSettings().getPlayers() / Main.getInstance().getSettings().getTeams()) + " players per team", ChatColor.YELLOW + "Number of players must be divisible by number of teams!", ChatColor.GRAY + "Right-click to decrease; left-click to increase.")
                 .getItem());
         SETTINGS.setItem(10, new ItemBuilder().setMaterial(Material.ITEM_FRAME)
                 .setDisplayName(ChatColor.DARK_PURPLE + "Drop flags:")
-                .setLore(Main.getInstance().getSettings().isDropFlags() ? ChatColor.GREEN + "Flags will drop." : ChatColor.RED + "Flags will not drop.", ChatColor.GRAY + "When players do not die to a player, flags on them will drop to be picked up, or they can return immediately.")
+                .setLore(Main.getInstance().getSettings().isDropFlags() ? ChatColor.GREEN + "Flags will drop." : ChatColor.RED + "Flags will not drop.", ChatColor.GRAY + "Not working yet")
                 .getItem());
         SETTINGS.setItem(11, new ItemBuilder().setMaterial(Material.BEACON)
                 .setDisplayName(ChatColor.DARK_PURPLE + "Allow shouts:")
@@ -55,11 +54,15 @@ public class SettingsCommand implements CommandExecutor {
                 .getItem());
         SETTINGS.setItem(16, new ItemBuilder().setMaterial(Material.PAPER)
                 .setDisplayName(ChatColor.DARK_PURPLE + "Map:")
-                .setLore(ChatColor.GRAY + "Current Map:" + Main.getInstance().getSettings().getMap())
+                .setLore(ChatColor.GRAY + "Current Map:" + Main.getInstance().getSettings().getMapName())
                 .getItem());
         SETTINGS.setItem(17, new ItemBuilder().setMaterial(Material.ENDER_EYE)
                 .setDisplayName(ChatColor.DARK_PURPLE + "Allow Spectators:")
                 .setLore(Main.getInstance().getSettings().isAllowSpectators() ? ChatColor.GREEN + "Spectators are allowed." : ChatColor.RED + "Spectators are not allowed.", ChatColor.GRAY + "Allows players to spectate.")
+                .getItem());
+        SETTINGS.setItem(18, new ItemBuilder().setMaterial(Material.MAGENTA_GLAZED_TERRACOTTA)
+                .setDisplayName(ChatColor.DARK_PURPLE + "Drop flags:")
+                .setLore(Main.getInstance().getSettings().isChangeKitDuringGame() ? ChatColor.GREEN + "Players can change their kit after dying." : ChatColor.RED + "Players cannot change their kit after dying.", ChatColor.GRAY + "Not working yet")
                 .getItem());
 
         SETTINGS.setItem(27, new ItemBuilder().setMaterial(Material.IRON_AXE)
@@ -157,6 +160,7 @@ public class SettingsCommand implements CommandExecutor {
                         }
                         Main.getInstance().getSettings().setMap(args[2]);
                         player.sendMessage(ChatColor.GREEN + "Map set to \"" + args[2] + "\"!");
+                        Main.getInstance().updateRegion();
                         return true;
                 }
             }

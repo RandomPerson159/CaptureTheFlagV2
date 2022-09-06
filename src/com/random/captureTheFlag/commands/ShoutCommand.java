@@ -11,7 +11,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.*;
+
 public class ShoutCommand implements CommandExecutor {
+    private Map<UUID, Long> lastShout = new HashMap<>();
+
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
         if (!(commandSender instanceof Player)) {
@@ -32,10 +36,20 @@ public class ShoutCommand implements CommandExecutor {
             player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Command can only be used during the game!");
             return true;
         }
-
         if (Main.getInstance().getPlayers().get(player.getUniqueId()).getTeam() == Team.SPEC) {
-            player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Command can only be used by players!");
+            if (!player.isOp()) {
+                player.sendMessage(ChatColor.RED + "[⚠] Whoops!  Command can only be used by players!");
+                return true;
+            }
+        }
+        long currentTime = System.currentTimeMillis();
+        if (lastShout.get(player.getUniqueId()) != null && lastShout.get(player.getUniqueId()) + 300000L > currentTime) {
+            player.sendMessage(ChatColor.RED + "[⚠] Whoops!  You cannot use this command for another " + (lastShout.get(player.getUniqueId()) + 300000L - currentTime)/1000 + " seconds!");
             return true;
+        } else {
+            if (!player.isOp()) {
+                lastShout.put(player.getUniqueId(), currentTime);
+            }
         }
 
         StringBuilder msg = new StringBuilder();

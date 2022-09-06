@@ -4,9 +4,7 @@ import com.random.captureTheFlag.Main;
 import com.random.captureTheFlag.commands.SettingsCommand;
 import com.random.captureTheFlag.game.GameState;
 import com.random.captureTheFlag.game.Settings;
-import com.random.captureTheFlag.player.CapturePlayer;
 import com.random.captureTheFlag.player.KitType;
-import com.random.captureTheFlag.player.Team;
 import com.random.captureTheFlag.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -35,10 +33,10 @@ public class InvClickListener implements Listener {
     private static Inventory YELLOW_KITS = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Yellow Team Kit Selection");
     public static Map<KitType, Integer> yellowKits = new HashMap<>();
 
-    private static Inventory MID_FIELD = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Mid-range Kit");
-    private static Inventory DEFENSE = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Defense Kit");
-    private static Inventory BOW = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Long-range Kit");
-    private static Inventory FLAG_STEALER = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Flag-stealer Kit");
+    private static final Inventory MID_FIELD = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Mid-range Kit");
+    private static final Inventory DEFENSE = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Defense Kit");
+    private static final Inventory BOW = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Long-range Kit");
+    private static final Inventory FLAG_STEALER = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Flag-stealer Kit");
 
     static {
         redKits.put(KitType.MID_FIELD, 0);
@@ -184,20 +182,20 @@ public class InvClickListener implements Listener {
             if (ev.getCurrentItem().getType() == Material.PLAYER_HEAD) {
                 if (Main.getInstance().getSettings().getTeams() == 2) {
                     if (ev.getClick() == ClickType.LEFT) {
-                        Main.getInstance().getSettings().setPlayers(ev.getCurrentItem().getAmount() + 2);
+                        Main.getInstance().getSettings().setPlayers(Main.getInstance().getSettings().getPlayers() + 2);
                         Main.getInstance().getSettings().setMidFeildKit(Main.getInstance().getSettings().getMidFeildKit() + 1);
                     } else if (ev.getClick() == ClickType.RIGHT) {
                         if (Main.getInstance().getSettings().getPlayers() != 2) {
-                            Main.getInstance().getSettings().setPlayers(ev.getCurrentItem().getAmount() - 2);
+                            Main.getInstance().getSettings().setPlayers(Main.getInstance().getSettings().getPlayers() - 2);
                         }
                     }
                 } else {
                     if (ev.getClick() == ClickType.LEFT) {
-                        Main.getInstance().getSettings().setPlayers(ev.getCurrentItem().getAmount() + 4);
+                        Main.getInstance().getSettings().setPlayers(Main.getInstance().getSettings().getPlayers() + 4);
                         Main.getInstance().getSettings().setMidFeildKit(Main.getInstance().getSettings().getMidFeildKit() + 1);
                     } else if (ev.getClick() == ClickType.RIGHT) {
                         if (Main.getInstance().getSettings().getPlayers() != 4) {
-                            Main.getInstance().getSettings().setPlayers(ev.getCurrentItem().getAmount() - 4);
+                            Main.getInstance().getSettings().setPlayers(Main.getInstance().getSettings().getPlayers() - 4);
                         }
                     }
                 }
@@ -308,6 +306,10 @@ public class InvClickListener implements Listener {
             }
             if (ev.getCurrentItem().getType() == Material.STRUCTURE_VOID) {
                 Main.getInstance().setSettings(new Settings(8, true, true, 2, 1, 1, 1, 1, 2, 10));
+            }
+            if (ev.getCurrentItem().getType() == Material.MAGENTA_GLAZED_TERRACOTTA) {
+                Main.getInstance().getSettings().setAllowSpectators(!Main.getInstance().getSettings().isAllowSpectators());
+
             }
 
             SettingsCommand.updateInv();

@@ -7,6 +7,7 @@ import com.random.captureTheFlag.player.CapturePlayer;
 import com.random.captureTheFlag.player.KitType;
 import com.random.captureTheFlag.player.Team;
 import com.random.captureTheFlag.util.ItemBuilder;
+import com.random.captureTheFlag.util.Region;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -19,15 +20,18 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.Map;
 
 public class Main extends JavaPlugin {
     private static Main instance;
     private Map<UUID, CapturePlayer> players = new HashMap<>();
     private GameState state = GameState.WAIT;
-    private final Set<Flag> flags = new HashSet<>();
+    private final List<Flag> flags = new ArrayList<>();
     private Settings settings;
     private Location wait;
     private boolean enabled = false;
+    private Region region;
+    private CaptureBoard b;
 
     public Main() {
         instance = this;
@@ -69,15 +73,6 @@ public class Main extends JavaPlugin {
             enabled = getConfig("settings").getBoolean("enabled");
         }
 
-        for (Player all : Bukkit.getOnlinePlayers()) {
-            players.put(all.getUniqueId(), new CapturePlayer(all.getUniqueId()));
-            if (enabled) {
-                all.sendMessage(ChatColor.GREEN + "Capture the Flag has been enabled!");
-                all.removePotionEffect(PotionEffectType.GLOWING);
-                all.removePotionEffect(PotionEffectType.SLOW);
-            }
-        }
-
         Bukkit.getPluginCommand("ctfteams").setExecutor(new AssignCommand());
         Bukkit.getPluginCommand("ctfsetup").setExecutor(new SetupCommand());
         Bukkit.getPluginCommand("ctfteams").setExecutor(new AssignCommand());
@@ -88,19 +83,31 @@ public class Main extends JavaPlugin {
         Bukkit.getPluginCommand("ctfsettings").setExecutor(new SettingsCommand());
         Bukkit.getPluginCommand("ctfenable").setExecutor(new EnabledCommand());
 
-        if (enabled) {
-            PluginManager pm = Bukkit.getPluginManager();
-            pm.registerEvents(new ChatListener(), this);
-            pm.registerEvents(new FlagListener(), this);
-            pm.registerEvents(new JoinListener(), this);
-            pm.registerEvents(new PermissionsListener(), this);
-            pm.registerEvents(new InvClickListener(), this);
-        } else {
+        if (!enabled) {
+            for (Player all : Bukkit.getOnlinePlayers()) {
+                all.sendMessage(ChatColor.RED + "Capture the Flag has been disabled.");
+            }
             return;
+        }
+
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(new ChatListener(), this);
+        pm.registerEvents(new FlagListener(), this);
+        pm.registerEvents(new JoinListener(), this);
+        pm.registerEvents(new PermissionsListener(), this);
+        pm.registerEvents(new InvClickListener(), this);
+
+        for (Player all : Bukkit.getOnlinePlayers()) {
+            players.put(all.getUniqueId(), new CapturePlayer(all.getUniqueId()));
+            all.sendMessage(ChatColor.GREEN + "Capture the Flag has been enabled!");
+            all.removePotionEffect(PotionEffectType.GLOWING);
+            all.removePotionEffect(PotionEffectType.SLOW);
         }
 
         initFlags();
         initTeams();
+        region = new Region(getLocation(settings.getMapName() + ".pos1"), getLocation(settings.getMapName() + ".pos2"));
+        b = new CaptureBoard();
 
         new BukkitRunnable() {
             @Override
@@ -108,16 +115,21 @@ public class Main extends JavaPlugin {
                 if (flags.size() != 0) {
                     for (Flag flags : flags) {
                         if (flags.isDropped()) {
-                            flags.getItem().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, flags.getItem().getLocation().clone().add(0, 1.5, 0), 5, 1, 20, 1, true);
+                            flags.getItem().getWorld().spawnParticle(Particle.VILLAGER_ANGRY, flags.getItem().getLocation().clone().add(0, 11.5, 0), 10, 1, 10, 1);
                             continue;
                         }
                         if (flags.getHolder() != null) {
-                            flags.getHolder().getPlayer().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, flags.getHolder().getPlayer().getLocation().clone().add(0, 4, 0), 3, 0.125, 1, 0.125, true);
+                            flags.getHolder().getPlayer().getWorld().spawnParticle(Particle.VILLAGER_ANGRY, flags.getHolder().getPlayer().getLocation().clone().add(0, 7, 0), 5, 0.125, 10, 0.125);
                         }
                     }
                 }
             }
         }.runTaskTimer(this, 1, 1);
+    }
+
+    @Override
+    public void onDisable() {
+        if (enabled) b.remove();
     }
 
     public GameState getState() {
@@ -144,7 +156,7 @@ public class Main extends JavaPlugin {
         this.settings = settings;
     }
 
-    public Set<Flag> getFlags() {
+    public List<Flag> getFlags() {
         return flags;
     }
 
@@ -153,101 +165,66 @@ public class Main extends JavaPlugin {
             flag.take(null);
         }
         flags.clear();
-        if (settings.getFlags() == 2) {
-            if (settings.getTeams() == 2) {
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".2teams.2flags.redFlag1")));
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".2teams.2flags.redFlag2")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".2teams.2flags.blueFlag1")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".2teams.2flags.blueFlag2")));
-            } else {
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".4teams.2flags.redFlag1")));
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".4teams.2flags.redFlag2")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".4teams.2flags.blueFlag1")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".4teams.2flags.blueFlag2")));
-                flags.add(new Flag(Team.LIME, getLocation(settings.getMap() + ".4teams.2flags.greenFlag1")));
-                flags.add(new Flag(Team.LIME, getLocation(settings.getMap() + ".4teams.2flags.greenFlag2")));
-                flags.add(new Flag(Team.YELLOW, getLocation(settings.getMap() + ".4teams.2flags.yellowFlag1")));
-                flags.add(new Flag(Team.YELLOW, getLocation(settings.getMap() + ".4teams.2flags.yellowFlag2")));
+        for (Location loc : settings.getMap().getRedFlagLocs()) {
+            flags.add(new Flag(Team.RED, loc));
+        }
+        for (Location loc : settings.getMap().getBlueFlagLocs()) {
+            flags.add(new Flag(Team.BLUE, loc));
+        }
+        if (settings.getTeams() != 2) {
+            for (Location loc : settings.getMap().getGreenFlagLocs()) {
+                flags.add(new Flag(Team.LIME, loc));
             }
-        } else if (settings.getFlags() == 1) {
-            if (settings.getTeams() == 2) {
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".2teams.1flag.redFlag")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".2teams.1flag.blueFlag")));
-            } else {
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".4teams.1flag.redFlag")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".4teams.1flag.blueFlag")));
-                flags.add(new Flag(Team.LIME, getLocation(settings.getMap() + ".4teams.1flag.greenFlag")));
-                flags.add(new Flag(Team.YELLOW, getLocation(settings.getMap() + ".4teams.1flag.yellowFlag")));
-            }
-        } else {
-            if (settings.getTeams() == 2) {
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".2teams.3flags.redFlag1")));
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".2teams.3flags.redFlag2")));
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".2teams.3flags.redFlag3")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".2teams.3flags.blueFlag1")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".2teams.3flags.blueFlag2")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".2teams.3flags.blueFlag3")));
-            } else {
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".4teams.3flags.redFlag1")));
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".4teams.3flags.redFlag2")));
-                flags.add(new Flag(Team.RED, getLocation(settings.getMap() + ".4teams.3flags.redFlag3")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".4teams.3flags.blueFlag1")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".4teams.3flags.blueFlag2")));
-                flags.add(new Flag(Team.BLUE, getLocation(settings.getMap() + ".4teams.3flags.blueFlag3")));
-                flags.add(new Flag(Team.LIME, getLocation(settings.getMap() + ".4teams.3flags.greenFlag1")));
-                flags.add(new Flag(Team.LIME, getLocation(settings.getMap() + ".4teams.3flags.greenFlag2")));
-                flags.add(new Flag(Team.LIME, getLocation(settings.getMap() + ".4teams.3flags.greenFlag3")));
-                flags.add(new Flag(Team.YELLOW, getLocation(settings.getMap() + ".4teams.3flags.yellowFlag1")));
-                flags.add(new Flag(Team.YELLOW, getLocation(settings.getMap() + ".4teams.3flags.yellowFlag2")));
-                flags.add(new Flag(Team.YELLOW, getLocation(settings.getMap() + ".4teams.3flags.yellowFlag3")));
+            for (Location loc : settings.getMap().getYellowFlagLocs()) {
+                flags.add(new Flag(Team.YELLOW, loc));
             }
         }
 
         for(Flag flag : flags) {
-            flag.put(FlagEvent.RESET, null);
+            flag.put();
         }
     }
 
     public void initTeams() {
         if (settings.getTeams() == 2) {
             if (settings.getFlags() == 2) {
-                Team.RED.setSpawn(getLocation(settings.getMap() + ".2teams.2flags.redSpawn"));
-                Team.BLUE.setSpawn(getLocation(settings.getMap() + ".2teams.2flags.blueSpawn"));
-                Team.LIME.setSpawn(getLocation(settings.getMap() + ".2teams.2flags.greenSpawn"));
-                Team.YELLOW.setSpawn(getLocation(settings.getMap() + ".2teams.2flags.yellowSpawn"));
-                wait = getLocation(settings.getMap() + ".2teams.2flags.wait");
+                Team.RED.setSpawn(getLocation(settings.getMapName() + ".2teams.2flags.redSpawn"));
+                Team.BLUE.setSpawn(getLocation(settings.getMapName() + ".2teams.2flags.blueSpawn"));
+                Team.LIME.setSpawn(getLocation(settings.getMapName() + ".2teams.2flags.greenSpawn"));
+                Team.YELLOW.setSpawn(getLocation(settings.getMapName() + ".2teams.2flags.yellowSpawn"));
+                wait = getLocation(settings.getMapName() + ".2teams.2flags.wait");
             } else if (settings.getFlags() == 1) {
-                Team.RED.setSpawn(getLocation(settings.getMap() + ".2teams.1flag.redSpawn"));
-                Team.BLUE.setSpawn(getLocation(settings.getMap() + ".2teams.1flag.blueSpawn"));
-                Team.LIME.setSpawn(getLocation(settings.getMap() + ".2teams.1flag.greenSpawn"));
-                Team.YELLOW.setSpawn(getLocation(settings.getMap() + ".2teams.1flag.yellowSpawn"));
-                wait = getLocation(settings.getMap() + ".2teams.1flag.wait");
+                Team.RED.setSpawn(getLocation(settings.getMapName() + ".2teams.1flag.redSpawn"));
+                Team.BLUE.setSpawn(getLocation(settings.getMapName() + ".2teams.1flag.blueSpawn"));
+                Team.LIME.setSpawn(getLocation(settings.getMapName() + ".2teams.1flag.greenSpawn"));
+                Team.YELLOW.setSpawn(getLocation(settings.getMapName() + ".2teams.1flag.yellowSpawn"));
+                wait = getLocation(settings.getMapName() + ".2teams.1flag.wait");
             } else {
-                Team.RED.setSpawn(getLocation(settings.getMap() + ".2teams.3flags.redSpawn"));
-                Team.BLUE.setSpawn(getLocation(settings.getMap() + ".2teams.3flags.blueSpawn"));
-                Team.LIME.setSpawn(getLocation(settings.getMap() + ".2teams.3flags.greenSpawn"));
-                Team.YELLOW.setSpawn(getLocation(settings.getMap() + ".2teams.3flags.yellowSpawn"));
-                wait = getLocation(settings.getMap() + ".2teams.3flags.wait");
+                Team.RED.setSpawn(getLocation(settings.getMapName() + ".2teams.3flags.redSpawn"));
+                Team.BLUE.setSpawn(getLocation(settings.getMapName() + ".2teams.3flags.blueSpawn"));
+                Team.LIME.setSpawn(getLocation(settings.getMapName() + ".2teams.3flags.greenSpawn"));
+                Team.YELLOW.setSpawn(getLocation(settings.getMapName() + ".2teams.3flags.yellowSpawn"));
+                wait = getLocation(settings.getMapName() + ".2teams.3flags.wait");
             }
         } else {
             if (settings.getFlags() == 2) {
-                Team.RED.setSpawn(getLocation(settings.getMap() + ".4teams.2flags.redSpawn"));
-                Team.BLUE.setSpawn(getLocation(settings.getMap() + ".4teams.2flags.blueSpawn"));
-                Team.LIME.setSpawn(getLocation(settings.getMap() + ".4teams.2flags.greenSpawn"));
-                Team.YELLOW.setSpawn(getLocation(settings.getMap() + ".4teams.2flags.yellowSpawn"));
-                wait = getLocation(settings.getMap() + ".4teams.2flags.wait");
+                Team.RED.setSpawn(getLocation(settings.getMapName() + ".4teams.2flags.redSpawn"));
+                Team.BLUE.setSpawn(getLocation(settings.getMapName() + ".4teams.2flags.blueSpawn"));
+                Team.LIME.setSpawn(getLocation(settings.getMapName() + ".4teams.2flags.greenSpawn"));
+                Team.YELLOW.setSpawn(getLocation(settings.getMapName() + ".4teams.2flags.yellowSpawn"));
+                wait = getLocation(settings.getMapName() + ".4teams.2flags.wait");
             } else if (settings.getFlags() == 1) {
-                Team.RED.setSpawn(getLocation(settings.getMap() + ".4teams.redSpawn"));
-                Team.BLUE.setSpawn(getLocation(settings.getMap() + ".4teams.blueSpawn"));
-                Team.LIME.setSpawn(getLocation(settings.getMap() + ".4teams.greenSpawn"));
-                Team.YELLOW.setSpawn(getLocation(settings.getMap() + ".4teams.yellowSpawn"));
-                wait = getLocation(settings.getMap() + ".4teams.1flag.wait");
+                Team.RED.setSpawn(getLocation(settings.getMapName() + ".4teams.redSpawn"));
+                Team.BLUE.setSpawn(getLocation(settings.getMapName() + ".4teams.blueSpawn"));
+                Team.LIME.setSpawn(getLocation(settings.getMapName() + ".4teams.greenSpawn"));
+                Team.YELLOW.setSpawn(getLocation(settings.getMapName() + ".4teams.yellowSpawn"));
+                wait = getLocation(settings.getMapName() + ".4teams.1flag.wait");
             } else {
-                Team.RED.setSpawn(getLocation(settings.getMap() + ".4teams.3flags.redSpawn"));
-                Team.BLUE.setSpawn(getLocation(settings.getMap() + ".4teams.3flags.blueSpawn"));
-                Team.LIME.setSpawn(getLocation(settings.getMap() + ".4teams.3flags.greenSpawn"));
-                Team.YELLOW.setSpawn(getLocation(settings.getMap() + ".4teams.3flags.yellowSpawn"));
-                wait = getLocation(settings.getMap() + ".4teams.3flags.wait");
+                Team.RED.setSpawn(getLocation(settings.getMapName() + ".4teams.3flags.redSpawn"));
+                Team.BLUE.setSpawn(getLocation(settings.getMapName() + ".4teams.3flags.blueSpawn"));
+                Team.LIME.setSpawn(getLocation(settings.getMapName() + ".4teams.3flags.greenSpawn"));
+                Team.YELLOW.setSpawn(getLocation(settings.getMapName() + ".4teams.3flags.yellowSpawn"));
+                wait = getLocation(settings.getMapName() + ".4teams.3flags.wait");
             }
         }
     }
@@ -266,6 +243,8 @@ public class Main extends JavaPlugin {
             } else if (InvClickListener.redKits.get(KitType.FLAG_STEALER) != settings.getFlagStealerKit()) {
                 InvClickListener.redKits.put(KitType.FLAG_STEALER, InvClickListener.redKits.get(KitType.FLAG_STEALER) + 1);
                 return KitType.FLAG_STEALER;
+            } else {
+                return KitType.MID_FIELD;
             }
         } else if (team == Team.BLUE) {
             if (InvClickListener.blueKits.get(KitType.MID_FIELD) != settings.getMidFeildKit()) {
@@ -280,6 +259,8 @@ public class Main extends JavaPlugin {
             } else if (InvClickListener.blueKits.get(KitType.FLAG_STEALER) != settings.getFlagStealerKit()) {
                 InvClickListener.blueKits.put(KitType.FLAG_STEALER, InvClickListener.blueKits.get(KitType.FLAG_STEALER) + 1);
                 return KitType.FLAG_STEALER;
+            } else {
+                return KitType.MID_FIELD;
             }
         } else if (team == Team.LIME) {
             if (InvClickListener.greenKits.get(KitType.MID_FIELD) != settings.getMidFeildKit()) {
@@ -294,6 +275,8 @@ public class Main extends JavaPlugin {
             } else if (InvClickListener.greenKits.get(KitType.FLAG_STEALER) != settings.getFlagStealerKit()) {
                 InvClickListener.greenKits.put(KitType.FLAG_STEALER, InvClickListener.greenKits.get(KitType.FLAG_STEALER) + 1);
                 return KitType.FLAG_STEALER;
+            } else {
+                return KitType.MID_FIELD;
             }
         } else if (team == Team.YELLOW) {
             if (InvClickListener.yellowKits.get(KitType.MID_FIELD) != settings.getMidFeildKit()) {
@@ -305,9 +288,12 @@ public class Main extends JavaPlugin {
             } else if (InvClickListener.yellowKits.get(KitType.BOW) != settings.getBowKit()) {
                 InvClickListener.yellowKits.put(KitType.BOW, InvClickListener.yellowKits.get(KitType.BOW) + 1);
                 return KitType.BOW;
+            } else if (InvClickListener.yellowKits.get(KitType.FLAG_STEALER) != settings.getFlagStealerKit()) {
+                InvClickListener.yellowKits.put(KitType.FLAG_STEALER, InvClickListener.yellowKits.get(KitType.FLAG_STEALER) + 1);
+                return KitType.FLAG_STEALER;
+            } else {
+                return KitType.MID_FIELD;
             }
-            InvClickListener.yellowKits.put(KitType.FLAG_STEALER, InvClickListener.yellowKits.get(KitType.FLAG_STEALER) + 1);
-            return KitType.FLAG_STEALER;
         }
         return null;
     }
@@ -344,8 +330,9 @@ public class Main extends JavaPlugin {
         }
 
         for (Player all : Bukkit.getOnlinePlayers()) {
-            all.teleport(wait);
             CapturePlayer cp = players.get(all.getUniqueId());
+            if (cp == null) continue;
+            all.teleport(wait);
             all.sendMessage(ChatColor.GRAY + "[====================================================]\n"
                     + ChatColor.GOLD + "                   Capture the Flag\n"
                     + ChatColor.GRAY + "     Welcome to Capture the Flag! The game is simple: capture opponent flags! Each team has " + settings.getFlags()
@@ -492,7 +479,7 @@ public class Main extends JavaPlugin {
         flagsCaptured.put(Team.YELLOW, 0);
 
         for (Flag allFlags : flags) {
-            if (allFlags.getHome().getBlock().getType() == Material.AIR && allFlags.getHolder() == null && !allFlags.isDropped()) {
+            if (allFlags.getHome() == null && allFlags.getHolder() == null && !allFlags.isDropped()) {
                 flagsCaptured.put(allFlags.getTeam(), flagsCaptured.get(allFlags.getTeam()) + 1);
             }
         }
@@ -604,16 +591,14 @@ public class Main extends JavaPlugin {
             players.clear();
 
             for (Player all : Bukkit.getOnlinePlayers()) {
-                for (Flag bruh : flags) {
-                    all.stopAllSounds();
-                    all.sendMessage(ChatColor.GRAY + "[====================================================]\n"
-                            + "          " + bruh.getTeam().getColor() + bruh.getTeam().getName() + " Team" + ChatColor.GOLD + " Wins!\n \n"
-                            + bruh.getTeam().getColor() + "     " + bruh.getTeam().getName() + ChatColor.GRAY + " was the last team standing!"
-                            + ChatColor.GREEN + " Good Game\n \n"
-                            + ChatColor.GRAY + "[====================================================]");
-                    all.playSound(all.getLocation(), Sound.ENTITY_WITHER_DEATH, 7, 1);
-                    break;
-                }
+                Flag f = flags.get(0);
+                all.stopAllSounds();
+                all.sendMessage(ChatColor.GRAY + "[====================================================]\n"
+                        + "          " + f.getTeam().getColor() + f.getTeam().getName() + " Team" + ChatColor.GOLD + " Wins!\n \n"
+                        + f.getTeam().getColor() + "     " + f.getTeam().getName() + ChatColor.GRAY + " was the last team standing!"
+                        + ChatColor.GREEN + " Good Game\n \n"
+                        + ChatColor.GRAY + "[====================================================]");
+                all.playSound(all.getLocation(), Sound.ENTITY_WITHER_DEATH, 7, 1);
                 all.teleport(Bukkit.getWorld("world").getSpawnLocation());
                 all.setGameMode(GameMode.SURVIVAL);
                 all.getInventory().clear();
@@ -649,6 +634,9 @@ public class Main extends JavaPlugin {
             initFlags();
             initTeams();
 
+            b.remove();
+            b = new CaptureBoard();
+
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -656,7 +644,7 @@ public class Main extends JavaPlugin {
                         start();
                     }
                 }
-            }.runTaskLater(this, 300);
+            }.runTaskLater(this, 20 * 20);
         }
     }
 
@@ -717,7 +705,19 @@ public class Main extends JavaPlugin {
 
     }
 
+    public Region getRegion() {
+        return region;
+    }
+
+    public void updateRegion() {
+        region = new Region(getLocation(settings.getMap() + ".pos1"), getLocation(settings.getMap() + ".pos2"));
+    }
+
     public static Main getInstance() {
         return instance;
+    }
+
+    public void updateBoard() {
+        b.updateBoard(settings, flags, settings.getMap().getFlagLocs(), state);
     }
 }

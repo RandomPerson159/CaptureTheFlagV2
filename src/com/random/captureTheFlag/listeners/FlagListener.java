@@ -2,7 +2,6 @@ package com.random.captureTheFlag.listeners;
 
 import com.random.captureTheFlag.Main;
 import com.random.captureTheFlag.game.Flag;
-import com.random.captureTheFlag.game.FlagEvent;
 import com.random.captureTheFlag.game.GameState;
 import com.random.captureTheFlag.player.CapturePlayer;
 import com.random.captureTheFlag.player.Team;
@@ -21,33 +20,79 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class FlagListener implements Listener {
     private final Map<UUID, Long> interactions = new HashMap<>();
 
     @EventHandler
     void onInteract(PlayerInteractEvent ev) {
-        if (Main.getInstance().getState() != GameState.GAME) {
-            return;
-        }
+        if (Main.getInstance().getState() != GameState.GAME) return;
+        if (ev.getClickedBlock() == null) return;
+        if (!Main.getInstance().getRegion().contains(ev.getClickedBlock().getLocation())) return;
 
         if (ev.getAction() == Action.LEFT_CLICK_BLOCK || ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            final Long lastInteraction = interactions.get(ev.getPlayer().getUniqueId());
-            if(lastInteraction != null && lastInteraction + 100L > System.currentTimeMillis()) {
-                ev.setCancelled(true);
-                return;
-            }
             CapturePlayer cp = Main.getInstance().getPlayers().get(ev.getPlayer().getUniqueId());
             if (cp == null) return;
             if (cp.getTeam() == Team.SPEC && !ev.getPlayer().isOp()) return;
             if (ev.getClickedBlock().getType() == Material.GRAY_STAINED_GLASS) {
+                // Handle Returning
                 if (ev.getItem() == null) return;
                 if (!ev.getItem().getType().toString().contains("_BANNER")) return;
-                for (Flag flag : Main.getInstance().getFlags()) {
-                    if (flag.getHome().clone().getBlock().getLocation().subtract(0, 1, 0).distance(ev.getClickedBlock().getLocation()) < 1) {
+                for (Location flagLoc : Main.getInstance().getSettings().getMap().getFlagLocs()) {
+                    if (flagLoc.getBlock().getLocation().distance(ev.getClickedBlock().getLocation()) < 1.5) {
+                        for (Flag flag : Main.getInstance().getFlags()) {
+                            if (flag.getHolder() == null) continue;
+                            if (flag.getHolder().getPlayer().getUniqueId().equals(ev.getPlayer().getUniqueId())) {
+                                if (flag.getStack().isSimilar(ev.getItem())) {
+                                    if (flag.getTeam() == cp.getTeam() || (cp.getTeam() == Team.SPEC && cp.getPlayer().isOp())) {
+                                        if (!getLocs(flag.getTeam()).contains(flagLoc)) {
+                                            ev.getPlayer().sendMessage(ChatColor.RED + "You cannot return your flag to an enemy base!  Return this flag to an empty beam at your base!");
+                                            ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_BLAZE_HURT, 7, 1);
+                                            return;
+                                        }
+                                        // Return Flag
+                                        flag.put(flagLoc, cp);
+                                        ev.getPlayer().getInventory().getItemInMainHand().setAmount(ev.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
+                                    } else {
+                                        if (!getLocs(flag.getTeam()).contains(flagLoc)) {
+                                            ev.getPlayer().sendMessage(ChatColor.RED + "You cannot return your flag to an enemy base!  Return this flag to an empty beam at your base!");
+                                            ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_BLAZE_HURT, 7, 1);
+                                            return;
+                                        } else {
+                                            ev.getPlayer().sendMessage(ChatColor.RED + "You need an active flag to capture an opponents!  Carry it to one of your active flags to capture it.");
+                                            ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_BLAZE_HURT, 7, 1);
+                                        }
+                                    }
+
+                                    ev.getPlayer().removePotionEffect(PotionEffectType.GLOWING);
+                                    ev.getPlayer().removePotionEffect(PotionEffectType.SLOW);
+
+                                    boolean stillHasFlags = false;
+                                    for (Flag flags : Main.getInstance().getFlags()) {
+                                        if (flags.getHolder() == null) continue;
+                                        if (flags.getHolder().getPlayer().getUniqueId().equals(ev.getPlayer().getUniqueId())) {
+                                            stillHasFlags = true;
+
+                                            ev.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 99999, 0));
+                                            ev.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 99999, 0));
+
+                                            ev.getPlayer().getInventory().setBoots(new ItemBuilder().setMaterial(Material.LEATHER_BOOTS)
+                                                    .setArmorColor(cp.getTeam() == Team.RED ? Color.RED : cp.getTeam() == Team.BLUE ? Color.BLUE : cp.getTeam() == Team.LIME ? Color.LIME : Color.YELLOW)
+                                                    .getItem());
+                                            break;
+                                        }
+                                    }
+                                    if (!stillHasFlags) {
+                                        cp.getKit().apply(cp);
+                                    }
+                                    Main.getInstance().updateBoard();
+                                    return;
+                                }
+                            }
+                        }
+                        return;
+                        /*
                         if (flag.getStack().equals(new ItemBuilder(ev.getItem().clone()).setAmount(1).getItem())) {
                             if (flag.getTeam() == cp.getTeam() || cp.getTeam() == Team.SPEC) {
                                 if (flag.getHome().getBlock().getType().toString().contains("_BANNER")) {
@@ -57,7 +102,7 @@ public class FlagListener implements Listener {
                                 }
                                 if (flag.getHolder() != null) {
                                     if (flag.getHolder().getPlayer().getUniqueId().equals(cp.getPlayer().getUniqueId())) {
-                                        flag.put(FlagEvent.RETURN, cp);
+                                        flag.put(cp);
                                         ev.getPlayer().getInventory().getItemInMainHand().setAmount(ev.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
                                     } else {
                                         flag.put(FlagEvent.RETURN1, cp);
@@ -65,6 +110,7 @@ public class FlagListener implements Listener {
                                         for (Flag teamFlag : Main.getInstance().getFlags()) {
                                             if ((teamFlag.getTeam() == cp.getTeam() || cp.getTeam() == Team.SPEC) && teamFlag.getHolder() != null && teamFlag.getHolder().getPlayer().getUniqueId().equals(cp.getPlayer().getUniqueId()) && teamFlag.getHome() != flag.getHome()) {
                                                 teamFlag.setHolder(null);
+                                                break;
                                             }
                                         }
                                     }
@@ -74,8 +120,10 @@ public class FlagListener implements Listener {
                                     for (Flag teamFlag : Main.getInstance().getFlags()) {
                                         if ((teamFlag.getTeam() == cp.getTeam() || cp.getTeam() == Team.SPEC) && teamFlag.getHolder() != null && teamFlag.getHolder().getPlayer().getUniqueId().equals(cp.getPlayer().getUniqueId())) {
                                             teamFlag.setHolder(null);
+                                            break;
                                         }
                                     }
+
                                 }
 
                                 ev.getPlayer().removePotionEffect(PotionEffectType.GLOWING);
@@ -111,16 +159,41 @@ public class FlagListener implements Listener {
                             ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_BLAZE_HURT, 7, 1);
                         }
                         return;
+                         */
                     }
                 }
-            } else if (ev.getClickedBlock().getType().toString().contains("_BANNER")) {
-                for (Flag flag : Main.getInstance().getFlags()) {
-                    if (flag.getHome().clone().getBlock().getLocation().distance(ev.getClickedBlock().getLocation()) < 1) {
+            } else if (ev.getClickedBlock().getType().name().contains("_BANNER")) {
+                if (interactions.get(ev.getPlayer().getUniqueId()) != null && interactions.get(ev.getPlayer().getUniqueId()) + 100L > System.currentTimeMillis()) {
+                    ev.setCancelled(true);
+                    return;
+                }
+                interactions.put(ev.getPlayer().getUniqueId(), System.currentTimeMillis());
+                if (Main.getInstance().getSettings().getTeams() == 2) {
+                    if (!(ev.getClickedBlock().getType() == Material.RED_BANNER
+                            || ev.getClickedBlock().getType() == Material.BLUE_BANNER
+                            || ev.getClickedBlock().getType() == Material.RED_STAINED_GLASS
+                            || ev.getClickedBlock().getType() == Material.BLUE_STAINED_GLASS)) {
+                        return;
+                    }
+                } else if (Main.getInstance().getSettings().getTeams() == 4) {
+                    if (!(ev.getClickedBlock().getType() == Material.RED_BANNER
+                            || ev.getClickedBlock().getType() == Material.BLUE_BANNER
+                            || ev.getClickedBlock().getType() == Material.LIME_BANNER
+                            || ev.getClickedBlock().getType() == Material.YELLOW_BANNER
+                            || ev.getClickedBlock().getType() == Material.RED_STAINED_GLASS
+                            || ev.getClickedBlock().getType() == Material.BLUE_STAINED_GLASS
+                            || ev.getClickedBlock().getType() == Material.LIME_STAINED_GLASS
+                            || ev.getClickedBlock().getType() == Material.YELLOW_STAINED_GLASS)) {
+                        return;
+                    }
+                }
+                for (Location flagLoc : Main.getInstance().getSettings().getMap().getFlagLocs()) {
+                    if (flagLoc.getBlock().getLocation().distance(ev.getClickedBlock().getLocation()) < 1.5) {
                         if (ev.getItem() != null && ev.getItem().getType().toString().contains("_BANNER")) {
-                            // Capturing
-                            if (flag.getTeam() == cp.getTeam() || cp.getTeam() == Team.SPEC) {
+                            // Handle Capturing
+                            if (getLocs(cp.getTeam()).contains(flagLoc) || (cp.getTeam() == Team.SPEC && cp.getPlayer().isOp())) {
                                 for (Flag capturing : Main.getInstance().getFlags()) {
-                                    if (capturing.getStack().equals(new ItemBuilder(ev.getItem().clone()).setAmount(1).getItem()) && capturing.getHolder() != null
+                                    if (capturing.getStack().isSimilar(ev.getItem()) && capturing.getHolder() != null
                                             && capturing.getHolder().getPlayer().getUniqueId().equals(cp.getPlayer().getUniqueId())) {
                                         if (capturing.getTeam() != cp.getTeam()) {
                                             ev.getPlayer().getInventory().getItemInMainHand().setAmount(ev.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
@@ -158,6 +231,7 @@ public class FlagListener implements Listener {
                                                 cp.getKit().apply(cp);
                                             }
 
+                                            Main.getInstance().updateBoard();
                                             Main.getInstance().tryEnd();
                                         } else {
                                             ev.getPlayer().sendMessage(ChatColor.RED + "You must click an empty beam to return your flag!");
@@ -167,12 +241,13 @@ public class FlagListener implements Listener {
                                     }
                                 }
                             } else {
-                                ev.getPlayer().sendMessage(ChatColor.RED + "You must use your flag to capture an opponent's flag!");
+                                ev.getPlayer().sendMessage(ChatColor.RED + "You must use your flag to capture an opponent's!");
                                 ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_BLAZE_HURT, 7, 1);
+                                return;
                             }
                         } else {
-                            // Taking
-                            if (flag.getTeam() != cp.getTeam()) {
+                            // Handle Taking
+                            if (!getLocs(cp.getTeam()).contains(flagLoc)) {
                                 for (Flag taking : Main.getInstance().getFlags()) {
                                     if (taking.getHolder() != null && taking.getHolder().getPlayer().getUniqueId().equals(ev.getPlayer().getUniqueId())) {
                                         ev.getPlayer().sendMessage(ChatColor.RED + "You are already holding a flag!  You must capture or return this flag before picking up another.");
@@ -186,12 +261,17 @@ public class FlagListener implements Listener {
                                         .setArmorColor(cp.getTeam() == Team.RED ? Color.RED : cp.getTeam() == Team.BLUE ? Color.BLUE : cp.getTeam() == Team.LIME ? Color.LIME : Color.YELLOW)
                                         .getItem());
 
-                                flag.take(cp);
-                                cp.getPlayer().getInventory().addItem(flag.getStack());
+                                for (Flag taking : Main.getInstance().getFlags()) {
+                                    if (taking.getHome() != null && taking.getHome().equals(flagLoc)) {
+                                        taking.take(cp);
+                                        cp.getPlayer().getInventory().addItem(taking.getStack());
+                                    }
+                                }
 
                                 ev.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 99999, 0));
                                 ev.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 99999, 0));
 
+                                Main.getInstance().updateBoard();
                             } else {
                                 ev.getPlayer().sendMessage(ChatColor.RED + "You cannot take your own flag!");
                                 ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_BLAZE_HURT, 7, 1);
@@ -208,6 +288,7 @@ public class FlagListener implements Listener {
 
     @EventHandler
     void onItemPickedUp(PlayerPickupItemEvent ev) {
+        if (!Main.getInstance().getRegion().contains(ev.getItem().getLocation())) return;
         if (!ev.getItem().getItemStack().getType().toString().contains("_BANNER")) return;
         if (Main.getInstance().getState() != GameState.GAME) {
             return;
@@ -263,6 +344,7 @@ public class FlagListener implements Listener {
 
     @EventHandler
     void onDamage(EntityDamageByEntityEvent ev) {
+        if (!Main.getInstance().getRegion().contains(ev.getEntity().getLocation())) return;
         if (ev.getEntity().getType() == EntityType.DROPPED_ITEM) {
             Item item = (Item) ev.getEntity();
             if (item.getItemStack().getType().toString().contains("_BANNER")) {
@@ -342,6 +424,7 @@ public class FlagListener implements Listener {
 
     @EventHandler
     void onPlayerDeath(PlayerDeathEvent ev) {
+        if (!Main.getInstance().getPlayers().containsKey(ev.getEntity().getUniqueId())) return;
         Player p = ev.getEntity();
         CapturePlayer cp = Main.getInstance().getPlayers().get(p.getUniqueId());
         if (cp == null) {
@@ -414,6 +497,7 @@ public class FlagListener implements Listener {
 
     @EventHandler
     void respawn(PlayerRespawnEvent ev) {
+        if (!Main.getInstance().getPlayers().containsKey(ev.getPlayer().getUniqueId())) return;
         if (Main.getInstance().getState() != GameState.GAME) {
             if (Main.getInstance().getState() == GameState.STARTING) {
                 ev.getPlayer().teleport(Main.getInstance().getWait());
@@ -458,4 +542,13 @@ public class FlagListener implements Listener {
             }
         }.runTaskTimer(Main.getInstance(), 20, 20);
     }
+
+    private List<Location> getLocs(Team team) {
+        if (team == Team.RED) return Main.getInstance().getSettings().getMap().getRedFlagLocs();
+        if (team == Team.BLUE) return Main.getInstance().getSettings().getMap().getBlueFlagLocs();
+        if (team == Team.LIME) return Main.getInstance().getSettings().getMap().getGreenFlagLocs();
+        if (team == Team.YELLOW) return Main.getInstance().getSettings().getMap().getYellowFlagLocs();
+        return new ArrayList<>();
+    }
+
 }

@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class Flag {
     private final Team team;
-    private final Location home;
+    private Location home;
     private boolean isDropped;
     private CapturePlayer holder;
     private final ItemStack stack;
@@ -32,37 +32,33 @@ public class Flag {
         return team;
     }
 
-    public void put(FlagEvent cause, CapturePlayer cp) {
+    public void put(Location loc, CapturePlayer cp) {
+        this.home = loc;
         home.getBlock().setType(Material.valueOf(team.name() + "_BANNER"));
         home.clone().subtract(0, 3, 0).getBlock().setType(Material.IRON_BLOCK);
         home.clone().subtract(0, 1, 0).getBlock().setType(Material.valueOf(team.name() + "_STAINED_GLASS"));
-
-        if (cause == FlagEvent.RETURN) {
-            String msg = ChatColor.GRAY + "[====================================================]\n"
-                    + ChatColor.GOLD + "                     Flag Returned\n \n"
-                    + "     " + team.getColor() + cp.getPlayer().getName() + ChatColor.GRAY + " has returned " + team.getColor() + team.getName() + " Team" + ChatColor.GRAY + "'s flag!\n \n"
-                    + "[====================================================]";
-            for (Player all : Bukkit.getOnlinePlayers()) {
-                all.sendMessage(msg);
-                all.playSound(all.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 7, 1);
-            }
-            this.holder = null;
-        } else if (cause == FlagEvent.RETURN1) {
-            String msg = ChatColor.GRAY + "[====================================================]\n"
-                    + ChatColor.GOLD + "                     Flag Returned\n \n"
-                    + "     " + team.getColor() + cp.getPlayer().getName() + ChatColor.GRAY + " has returned " + team.getColor() + team.getName() + " Team" + ChatColor.GRAY + "'s flag!\n \n"
-                    + "[====================================================]";
-            for (Player all : Bukkit.getOnlinePlayers()) {
-                all.sendMessage(msg);
-                all.playSound(all.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 7, 1);
-            }
+        String msg = ChatColor.GRAY + "[====================================================]\n"
+                + ChatColor.GOLD + "                     Flag Returned\n \n"
+                + "     " + cp.getTeam().getColor() + cp.getPlayer().getName() + ChatColor.GRAY + " has returned " + team.getColor() + team.getName() + " Team" + ChatColor.GRAY + "'s flag!\n \n"
+                + "[====================================================]";
+        for (Player all : Bukkit.getOnlinePlayers()) {
+            all.sendMessage(msg);
+            all.playSound(all.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 7, 1);
         }
+        this.holder = null;
+    }
+
+    public void put() {
+        home.getBlock().setType(Material.valueOf(team.name() + "_BANNER"));
+        home.clone().subtract(0, 3, 0).getBlock().setType(Material.IRON_BLOCK);
+        home.clone().subtract(0, 1, 0).getBlock().setType(Material.valueOf(team.name() + "_STAINED_GLASS"));
     }
 
     public void take(CapturePlayer cp) {
         home.getBlock().setType(Material.AIR);
         home.clone().subtract(0, 3, 0).getBlock().setType(Material.AIR);
         home.clone().subtract(0, 1, 0).getBlock().setType(Material.valueOf("GRAY_STAINED_GLASS"));
+        home = null;
 
         if (cp == null) return;
 
@@ -82,14 +78,6 @@ public class Flag {
     }
 
     public void drop(Location loc, CapturePlayer cp) {
-        if (loc.getBlock().getType() == Material.LAVA || loc.clone().subtract(0, 1, 0).getBlock().getType() == Material.LAVA) {
-            boolean foundBlock = false;
-            while (!foundBlock) {
-
-
-            }
-        }
-
         item = loc.getWorld().dropItem(loc, stack);
         this.isDropped = true;
 

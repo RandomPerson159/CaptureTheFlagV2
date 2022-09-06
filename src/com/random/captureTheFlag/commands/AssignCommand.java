@@ -2,6 +2,7 @@ package com.random.captureTheFlag.commands;
 
 import com.random.captureTheFlag.Main;
 import com.random.captureTheFlag.game.GameState;
+import com.random.captureTheFlag.listeners.InvClickListener;
 import com.random.captureTheFlag.player.CapturePlayer;
 import com.random.captureTheFlag.player.Team;
 import org.bukkit.Bukkit;
@@ -54,7 +55,31 @@ public class AssignCommand implements CommandExecutor {
                         if (Bukkit.getPlayer(args[i]) == null) {
                             player.sendMessage(ChatColor.RED + "Player \"" + args[i] + "\" does not exist or is not online!");
                         } else {
-                            Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId()).setTeam(Team.LIME);
+                            CapturePlayer cp = Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId());
+                            if (cp.getKit() != null) {
+                                switch (cp.getTeam()) {
+                                    case RED:
+                                        InvClickListener.redKits.put(cp.getKit(), InvClickListener.redKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case BLUE:
+                                        InvClickListener.blueKits.put(cp.getKit(), InvClickListener.blueKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case LIME:
+                                        InvClickListener.greenKits.put(cp.getKit(), InvClickListener.greenKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case YELLOW:
+                                        InvClickListener.yellowKits.put(cp.getKit(), InvClickListener.yellowKits.get(cp.getKit()) - 1);
+                                        break;
+                                    default:
+                                        cp.setKit(null);
+                                }
+
+                            }
+                            cp.getPlayer().closeInventory();
+                            if (Main.getInstance().getState() == GameState.GAME) {
+                                cp.setKit(Main.getInstance().getRandomKit(Team.LIME));
+                            }
+                            cp.setTeam(Team.LIME);
                             player.sendMessage(ChatColor.GRAY + "Player \"" + args[i] + "\" was assigned to " + ChatColor.GREEN + "Green Team" + ChatColor.GRAY + "!");
                         }
                     }
@@ -64,7 +89,31 @@ public class AssignCommand implements CommandExecutor {
                         if (Bukkit.getPlayer(args[i]) == null) {
                             player.sendMessage(ChatColor.RED + "Player \"" + args[i] + "\" does not exist or is not online!");
                         } else {
-                            Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId()).setTeam(Team.SPEC);
+                            CapturePlayer cp = Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId());
+                            if (cp.getKit() != null) {
+                                switch (cp.getTeam()) {
+                                    case RED:
+                                        InvClickListener.redKits.put(cp.getKit(), InvClickListener.redKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case BLUE:
+                                        InvClickListener.blueKits.put(cp.getKit(), InvClickListener.blueKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case LIME:
+                                        InvClickListener.greenKits.put(cp.getKit(), InvClickListener.greenKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case YELLOW:
+                                        InvClickListener.yellowKits.put(cp.getKit(), InvClickListener.yellowKits.get(cp.getKit()) - 1);
+                                        break;
+                                    default:
+                                        cp.setKit(null);
+                                }
+
+                            }
+                            cp.getPlayer().closeInventory();
+                            if (Main.getInstance().getState() == GameState.GAME) {
+                                cp.setKit(Main.getInstance().getRandomKit(Team.LIME));
+                            }
+                            cp.setTeam(Team.SPEC);
                             player.sendMessage(ChatColor.GRAY + "Player \"" + args[i] + "\" was assigned to " + ChatColor.DARK_GRAY + "Spectating Team" + ChatColor.GRAY + "!");
                         }
                     }
@@ -79,14 +128,35 @@ public class AssignCommand implements CommandExecutor {
                             player.sendMessage(ChatColor.RED + "Player \"" + args[i] + "\" does not exist or is not online!");
                         } else {
                             Team team = Team.valueOf(args[args.length - 1].toUpperCase());
-                            Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId()).setTeam(team);
+                            CapturePlayer cp = Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId());
+                            if (cp.getKit() != null) {
+                                switch (cp.getTeam()) {
+                                    case RED:
+                                        InvClickListener.redKits.put(cp.getKit(), InvClickListener.redKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case BLUE:
+                                        InvClickListener.blueKits.put(cp.getKit(), InvClickListener.blueKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case LIME:
+                                        InvClickListener.greenKits.put(cp.getKit(), InvClickListener.greenKits.get(cp.getKit()) - 1);
+                                        break;
+                                    case YELLOW:
+                                        InvClickListener.yellowKits.put(cp.getKit(), InvClickListener.yellowKits.get(cp.getKit()) - 1);
+                                        break;
+                                }
+
+                            }
+                            cp.getPlayer().closeInventory();
+                            if (Main.getInstance().getState() == GameState.GAME) {
+                                cp.setKit(Main.getInstance().getRandomKit(Team.LIME));
+                            }
+                            cp.setTeam(team);
                             player.sendMessage(ChatColor.GRAY + "Player \"" + args[i] + "\" was assigned to " + team.getColor() + team.getName() + " Team" + ChatColor.GRAY + "!");
                         }
                     }
                     break;
                 default:
                     player.sendMessage(ChatColor.RED + "Team \"" + args[args.length - 1] + "\" does not exist!  Possible teams: Red, Blue, Green, Yellow, Spec");
-
             }
             return true;
         }
@@ -96,7 +166,27 @@ public class AssignCommand implements CommandExecutor {
                 if (Bukkit.getPlayer(args[i]) == null) {
                     player.sendMessage(ChatColor.RED + "Player \"" + args[i] + "\" does not exist or is not online!");
                 } else {
-                    Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId()).setTeam(null);
+                    CapturePlayer cp = Main.getInstance().getPlayers().get(Bukkit.getPlayer(args[i]).getUniqueId());
+                    if (cp.getKit() != null) {
+                        switch (cp.getTeam()) {
+                            case RED:
+                                InvClickListener.redKits.put(cp.getKit(), InvClickListener.redKits.get(cp.getKit()) - 1);
+                                break;
+                            case BLUE:
+                                InvClickListener.blueKits.put(cp.getKit(), InvClickListener.blueKits.get(cp.getKit()) - 1);
+                                break;
+                            case LIME:
+                                InvClickListener.greenKits.put(cp.getKit(), InvClickListener.greenKits.get(cp.getKit()) - 1);
+                                break;
+                            case YELLOW:
+                                InvClickListener.yellowKits.put(cp.getKit(), InvClickListener.yellowKits.get(cp.getKit()) - 1);
+                                break;
+                            default:
+                                cp.setKit(null);
+                        }
+
+                    }
+                    Main.getInstance().getPlayers().remove(Bukkit.getPlayer(args[i]).getUniqueId());
                 }
             }
             return true;
